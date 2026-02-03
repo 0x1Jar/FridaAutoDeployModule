@@ -82,14 +82,39 @@ update_frida() {
     log_msg "Download successful, extracting..."
     
     # Decompress the xz file
+    DECOMPRESS_SUCCESS=0
+    
     if which unxz > /dev/null 2>&1; then
+      log_msg "Using unxz for decompression..."
       unxz -f "$TEMP_FILE" >> "$LOGFILE" 2>&1
       EXTRACTED_FILE="$DATADIR/frida-server"
+      DECOMPRESS_SUCCESS=1
     elif which xz > /dev/null 2>&1; then
+      log_msg "Using xz for decompression..."
       xz -d -f "$TEMP_FILE" >> "$LOGFILE" 2>&1
       EXTRACTED_FILE="$DATADIR/frida-server"
+      DECOMPRESS_SUCCESS=1
+    elif which 7z > /dev/null 2>&1; then
+      log_msg "Using 7z for decompression..."
+      7z x "$TEMP_FILE" -o"$DATADIR" >> "$LOGFILE" 2>&1
+      EXTRACTED_FILE="$DATADIR/frida-server"
+      DECOMPRESS_SUCCESS=1
+    elif which busybox > /dev/null 2>&1; then
+      log_msg "Using busybox for decompression..."
+      busybox xzcat "$TEMP_FILE" > "$DATADIR/frida-server" 2>> "$LOGFILE"
+      EXTRACTED_FILE="$DATADIR/frida-server"
+      DECOMPRESS_SUCCESS=1
     else
-      log_msg "ERROR: No xz decompression tool found"
+      log_msg "ERROR: No xz decompression tool found (unxz, xz, 7z, or busybox required)"
+      log_msg "Please manually decompress and push Frida Server:"
+      log_msg "  PC: unxz frida-server-*.xz"
+      log_msg "  adb push frida-server-* /data/adb/modules/frida_server_auto_deploy/system/bin/"
+      rm -f "$TEMP_FILE"
+      return 1
+    fi
+    
+    if [ "$DECOMPRESS_SUCCESS" -ne 1 ]; then
+      log_msg "ERROR: Decompression failed"
       rm -f "$TEMP_FILE"
       return 1
     fi

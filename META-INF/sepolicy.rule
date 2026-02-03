@@ -1,0 +1,7 @@
+# Optional: Custom SELinux Policy Rules
+# Uncomment and add rules if needed for Frida Server to work with SELinux enforcing mode
+# Example: allow frida_server domain to connect to network
+# allow frida_server self:capability { setuid setgid };
+
+# This file is optional and only needed if SELinux denials occur
+# To apply rules, use this file or add rules directly in the module

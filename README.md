@@ -111,15 +111,23 @@ Runs during early boot phase to:
 
 ### service.sh
 Runs during late boot phase to:
-- Check the latest Frida version from GitHub API
-- Compare with the installed version
-- Download and extract a new version if available
-- Start Frida Server with nohup (background daemon)
-- Log all operations to the log file
+- **Wait for network connectivity** - Checks for internet before attempting download
+- **Check the latest Frida version** from GitHub API
+- **Compare with the installed version**
+- **Download with retry logic** - Attempts download up to 3 times with 5-second intervals before failing
+- **Extract using multiple fallback methods** - unxz → xz → 7z → busybox xzcat
+- **Start Frida Server** with nohup (background daemon)
+- **Log all operations** to the log file
 
 **Frida Connection Information:**
 - Port: 27042 (default)
 - Bind address: 0.0.0.0 (accessible from network)
+
+**Improvements in Latest Version:**
+- Network wait mechanism (max 30 seconds) - waits for device to connect to internet
+- Retry logic (3 attempts with 5-second delays) - handles transient network failures
+- Better error messages - guides users when manual deployment is needed
+- Multi-fallback decompression - tries 4 different tools before failing
 
 ### uninstall.sh
 Runs when the module is removed to:
@@ -218,8 +226,11 @@ adb shell su -c "tail -f /data/adb/modules/frida_server_auto_deploy/data/frida/l
 ### Frida fails to download
 - Ensure device has internet connectivity
 - Check for firewall or proxy blocking GitHub
-- Device must be online during boot for automatic download
-- **If device lacks xz decompression tools (unxz, xz, 7z, busybox):**
+- **Device must be online during boot** - Module waits up to 30 seconds for network (auto-retries 3x)
+- If device is offline at boot:
+  - Wait for network to be ready before rebooting
+  - Or manually push Frida using steps below
+- **If device lacks xz decompression tools** (unxz, xz, 7z, busybox):
   - Manually decompress on your PC and push to device:
   ```bash
   # On PC:

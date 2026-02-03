@@ -219,7 +219,19 @@ adb shell su -c "tail -f /data/adb/modules/frida_server_auto_deploy/data/frida/l
 - Ensure device has internet connectivity
 - Check for firewall or proxy blocking GitHub
 - Device must be online during boot for automatic download
-- Manually download Frida and place it in `system/bin/`
+- **If device lacks xz decompression tools (unxz, xz, 7z, busybox):**
+  - Manually decompress on your PC and push to device:
+  ```bash
+  # On PC:
+  cd /tmp
+  wget https://github.com/frida/frida/releases/download/17.6.2/frida-server-17.6.2-android-arm64.xz
+  unxz frida-server-17.6.2-android-arm64.xz
+  adb push frida-server-17.6.2-android-arm64 /data/local/tmp/frida-server
+  adb shell su -c "cp /data/local/tmp/frida-server /data/adb/modules/frida_server_auto_deploy/system/bin/frida-server-android-arm64"
+  adb shell su -c "chmod +x /data/adb/modules/frida_server_auto_deploy/system/bin/frida-server-android-arm64"
+  adb shell su -c "sh -c 'echo 17.6.2 > /data/adb/modules/frida_server_auto_deploy/data/frida/frida_version.txt'"
+  adb shell su -c "nohup /data/adb/modules/frida_server_auto_deploy/system/bin/frida-server-android-arm64 -l 0.0.0.0:27042 &"
+  ```
 
 ### Permission denied when accessing module files
 - Use `su -c` prefix for commands requiring root:

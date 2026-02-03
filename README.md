@@ -134,7 +134,8 @@ Runs when the module is removed to:
 To view Frida Server operation logs in real-time:
 
 ```bash
-adb shell tail -f /data/adb/modules/frida_server_auto_deploy/data/frida/logs/frida.log
+# If permission denied, use su:
+adb shell su -c "tail -f /data/adb/modules/frida_server_auto_deploy/data/frida/logs/frida.log"
 ```
 
 Log includes:
@@ -154,16 +155,20 @@ adb shell ps | grep frida-server
 ### Stop Frida
 ```bash
 adb shell pkill -9 frida-server
+# If permission denied, use su:
+adb shell su -c "pkill -9 frida-server"
 ```
 
 ### Manually restart Frida
 ```bash
-adb shell service.sh  # Run service script
+adb shell su -c "/data/adb/modules/frida_server_auto_deploy/service.sh"
 ```
 
 ### View installed Frida version
 ```bash
 adb shell cat /data/adb/modules/frida_server_auto_deploy/data/frida/frida_version.txt
+# If permission denied, use su:
+adb shell su -c "cat /data/adb/modules/frida_server_auto_deploy/data/frida/frida_version.txt"
 ```
 
 ### Check port listening
@@ -171,6 +176,12 @@ adb shell cat /data/adb/modules/frida_server_auto_deploy/data/frida/frida_versio
 adb shell netstat -an | grep 27042
 # or
 adb shell ss -an | grep 27042
+```
+
+### Check module installation
+```bash
+# If permission denied, use su:
+adb shell su -c "ls -la /data/adb/modules/frida_server_auto_deploy/"
 ```
 
 ## Connecting from Client
@@ -184,11 +195,20 @@ frida -H <android_device_ip>:27042 -n com.example.app
 
 ## Troubleshooting
 
+### Permission Denied
+If you get "Permission denied" errors, use `su` (root access):
+```bash
+# Example with su:
+adb shell su -c "ls -la /data/adb/modules/frida_server_auto_deploy/"
+adb shell su -c "tail -f /data/adb/modules/frida_server_auto_deploy/data/frida/logs/frida.log"
+```
+
 ### Frida not running after reboot
-1. Check logs: `adb shell tail -f /data/adb/modules/frida_server_auto_deploy/data/frida/logs/frida.log`
+1. Check logs: `adb shell su -c "tail -f /data/adb/modules/frida_server_auto_deploy/data/frida/logs/frida.log"`
 2. Verify module is active in Magisk Manager
 3. Ensure device has internet connection on boot (for download)
-4. Reboot the device again
+4. **Make sure you rebooted after installation** - module requires reboot to start service.sh
+5. Reboot the device again if needed
 
 ### "Unsupported architecture" error
 - Your device architecture may be uncommon
@@ -198,11 +218,16 @@ frida -H <android_device_ip>:27042 -n com.example.app
 ### Frida fails to download
 - Ensure device has internet connectivity
 - Check for firewall or proxy blocking GitHub
+- Device must be online during boot for automatic download
 - Manually download Frida and place it in `system/bin/`
 
-### Permission denied when running
-- Ensure all scripts are executable: `chmod +x *.sh`
+### Permission denied when accessing module files
+- Use `su -c` prefix for commands requiring root:
+  ```bash
+  adb shell su -c "command_here"
+  ```
 - Ensure Magisk has full access to module files
+- Check if you have proper root access via `adb shell su -c "whoami"` (should output `root`)
 
 ## Manual Updates
 
